@@ -10,24 +10,17 @@ conn = mysql.connector.connect(user='root', password='', host='127.0.0.1', datab
 
 
         
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['POST','GET'])
 def get_data():
     # Assuming df_new is your DataFrame containing processed data
     selected_data = request.get_json().get('data')
     document_list = request.get_json().get('filePath')
     print(selected_data)
-    # print(request.form)
-    # print(request.data)
+
     print(document_list)
-    # print('data[]')
-    # data = df_new.to_dict(orient='records')
-    # return jsonify(data)
-   
-#    selected_data = request.form.getlist('data[]')
-#    selected_data= data['bmi']
     
     dm_pattern = re.compile(r'\bDM\b.*?(Under OHA)', re.DOTALL)
-    dyslipidemia_pattern = re.compile(r'HbA1c:\s*(.*?)\n')
+    # dyslipidemia_pattern = re.compile(r'HbA1c:\s*(.*?)\n')
     ihd_pattern = re.compile(r'\bIHD\b')
     cabg_pattern = re.compile(r'-Post CABG on (\d{1,2}/\d{1,2}/\d{4})')
     hba1c_pattern = re.compile(r'HbA1c:\s*(.*?)\n')
@@ -87,31 +80,38 @@ def get_data():
 
         print("File:", document_path)
         
-        if cabg_match:
-            cabg= cabg_match.group(1)
-            # print("Coronary Artery Bypass Grafting (CABG) Date:", cabg_match.group(1))
+        # if cabg_match:
+        #     cabg= cabg_match.group(1)
+        #     # print("Coronary Artery Bypass Grafting (CABG) Date:", cabg_match.group(1))
 
-        if hba1c_match:
-            hb1ac= hba1c_match.group(1).strip()
+        # if hba1c_match:
+        #     hb1ac= hba1c_match.group(1).strip()
 
-        if hr_match:
-            rest_hr= hr_match.group(1).strip()
+        # if hr_match:
+        #     rest_hr= hr_match.group(1).strip()
 
-        if hypertension_match:
-            hyper= hypertension_match.group(1).strip()
+        # if hypertension_match:
+        #     hyper= hypertension_match.group(1).strip()
 
-        if tc_match:
-            cholesterol= tc_match.group(1).strip()
+        # if tc_match:
+        #     cholesterol= tc_match.group(1).strip()
 
-        if smoking_match:
-            smoking= smoking_match.group(1).strip()
+        # if smoking_match:
+        #     smoking= smoking_match.group(1).strip()
 
-        if alcohol_match:
-            alcohol= alcohol_match.group(1).strip()
+        # if alcohol_match:
+        #     alcohol= alcohol_match.group(1).strip()
         
-        if bmi_match:
-            bmi= bmi_match.group(1).strip()
-            
+        # if bmi_match:
+        #     bmi= bmi_match.group(1).strip()
+        cabg= cabg_match.group(1) if cabg_match else None
+        hb1ac= hba1c_match.group(1) if hba1c_match else None
+        rest_hr= hr_match.group(1).strip() if hr_match else None
+        hyper= hypertension_match.group(1).strip() if hypertension_match else None
+        cholesterol= tc_match.group(1).strip() if tc_match else None
+        smoking= smoking_match.group(1).strip() if smoking_match else None
+        alcohol= alcohol_match.group(1).strip() if alcohol_match else None
+        bmi= bmi_match.group(1).strip() if bmi_match else None
         rest_bp= resting_bp_match.group(1) if resting_bp_match else None
         peak_bp= peak_bp_match.group(1) if peak_bp_match else None
         mets= mets_match.group(1) if mets_match else None
@@ -129,7 +129,7 @@ def get_data():
         'bmi':[bmi],
         'Rest BP':[rest_bp],
         'Peak BP':[peak_bp],
-        'METS':[mets]
+        'METS':[mets],
         }
 
         # Append the dictionary to the master DataFrame
