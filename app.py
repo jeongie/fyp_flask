@@ -19,12 +19,16 @@ def get_data():
 
     print(document_list)
     
-    dm_pattern = re.compile(r'\bDM\b.*?(Under OHA)', re.DOTALL)
+    # dm_pattern = re.compile(r'\bDM\b.*?(Under OHA)', re.DOTALL)
     # dyslipidemia_pattern = re.compile(r'HbA1c:\s*(.*?)\n')
-    ihd_pattern = re.compile(r'\bIHD\b')
+    # ihd_pattern = re.compile(r'\bIHD\b')
     cabg_pattern = re.compile(r'-Post CABG on (\d{1,2}/\d{1,2}/\d{4})')
+    ef_pattern= re.compile(r'EF:\s*(.*?)\n')
     hba1c_pattern = re.compile(r'HbA1c:\s*(.*?)\n')
     hr_pattern = re.compile(r'Resting HR:\s*(.*?)\n')
+    peak_hr_pattern = re.compile(r'Peak HR:\s*(.*?)\n')
+    hr_reserve_pattern=  re.compile(r'HR reserve:\s*(.*?)\n')
+    hr_recovery_pattern=  re.compile(r'HR recovery:\s*(.*?)\n')
     hypertension_pattern= re.compile(r'Hypertension:\s*(.*?)\n')
     tc_pattern = re.compile(r'TC:\s*(.*?)\n')
     smoking_pattern = re.compile(r'Smoking:\s*(.*?)\n')
@@ -38,6 +42,7 @@ def get_data():
     resting_bp_pattern = r"Resting BP: (\d+/\d+)"
     peak_bp_pattern = r"Peak BP: (\d+/\d+)"
     mets_pattern = r"METS: ([0-9.]+)"
+    
 
     df_new= pd.DataFrame()
 
@@ -62,8 +67,12 @@ def get_data():
         # dyslipidemia_match = dyslipidemia_pattern.search(document)
         # ihd_match = ihd_pattern.search(document)
         cabg_match = cabg_pattern.search(document)
+        ef_match = ef_pattern.search(document)
         hba1c_match = hba1c_pattern.search(document)
         hr_match= hr_pattern.search(document)
+        peak_hr_match = peak_hr_pattern.search(document)
+        hr_reserve_match= hr_reserve_pattern.search(document)
+        hr_recovery_match= hr_recovery_pattern.search(document)
         hypertension_match = hypertension_pattern.search(document)
         tc_match = tc_pattern.search(document)
         smoking_match = smoking_pattern.search(document)
@@ -87,26 +96,13 @@ def get_data():
         # if hba1c_match:
         #     hb1ac= hba1c_match.group(1).strip()
 
-        # if hr_match:
-        #     rest_hr= hr_match.group(1).strip()
-
-        # if hypertension_match:
-        #     hyper= hypertension_match.group(1).strip()
-
-        # if tc_match:
-        #     cholesterol= tc_match.group(1).strip()
-
-        # if smoking_match:
-        #     smoking= smoking_match.group(1).strip()
-
-        # if alcohol_match:
-        #     alcohol= alcohol_match.group(1).strip()
-        
-        # if bmi_match:
-        #     bmi= bmi_match.group(1).strip()
         cabg= cabg_match.group(1) if cabg_match else None
+        ef= ef_match.group(1) if ef_match else None
         hb1ac= hba1c_match.group(1) if hba1c_match else None
         rest_hr= hr_match.group(1).strip() if hr_match else None
+        peak_hr= peak_hr_match.group(1).strip() if peak_hr_match else None
+        hr_reserve= hr_reserve_match.group(1) if hr_reserve_match else None
+        hr_recovery= hr_recovery_match.group(1).strip() if hr_recovery_match else None
         hyper= hypertension_match.group(1).strip() if hypertension_match else None
         cholesterol= tc_match.group(1).strip() if tc_match else None
         smoking= smoking_match.group(1).strip() if smoking_match else None
@@ -120,8 +116,12 @@ def get_data():
         data = {
         'PID': [pidn],
         'cabg': [cabg],
+        'ef':[ef],
         'hb1ac': [hb1ac],
         'Rest HR':[rest_hr],
+        'Peak HR':[peak_hr],
+        'HR reserve':[hr_reserve],
+        'HR recovery':[hr_recovery],
         'hypertension':[hyper],
         'cholestrol': [cholesterol],
         'smoking':[smoking],
