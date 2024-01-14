@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request
 import pyodbc
 import os
 import re
-import docx2txt
 import fitz
 import pandas as pd
 
@@ -23,8 +22,8 @@ conn = pyodbc.connect(conn_str)
 #     print ("Connection Not Established")
 
 @app.route('/', methods=['POST','GET'])
-def index():
-    return "Hello"
+# def index():
+#     return "Hello"
 
 def get_data():
     # Assuming df_new is your DataFrame containing processed data
@@ -189,5 +188,6 @@ def get_data():
 
 
 if __name__ == '__main__':
+    # app.run (debug=True)
     app.run (debug=True, port=os.getenv("PORT",default=5000))
 
