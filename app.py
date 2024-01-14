@@ -17,9 +17,14 @@ conn_str = (
 )
 
 conn = pyodbc.connect(conn_str)
+if conn:
+    print ("Connected Successfully")
+else:
+    print ("Connection Not Established")
 
 @app.route('/', methods=['POST','GET'])
 def get_data():
+    # return ("Hello")
     # Assuming df_new is your DataFrame containing processed data
     selected_data = request.get_json().get('data')
     document_list = request.get_json().get('filePath')
