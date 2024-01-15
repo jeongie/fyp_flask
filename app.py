@@ -22,8 +22,7 @@ conn = pyodbc.connect(conn_str)
 #     print ("Connection Not Established")
 
 @app.route('/', methods=['POST','GET'])
-def index():
-    return "Hello"
+
 
 def get_data():
     # Assuming df_new is your DataFrame containing processed data
@@ -36,8 +35,8 @@ def get_data():
     # dm_pattern = re.compile(r'\bDM\b.*?(Under OHA)', re.DOTALL)
     # dyslipidemia_pattern = re.compile(r'HbA1c:\s*(.*?)\n')
     # ihd_pattern = re.compile(r'\bIHD\b')
-    
-    cabg_pattern = re.compile(r'-Post CABG on (\d{1,2}/\d{1,2}/\d{4})')
+    # cabg_pattern = re.compile(r'-Post CABG on (\d{1,2}/\d{1,2}/\d{4})')
+    age_pattern = re.compile(r'(\d+)\s*(?:years?|yrs?)-?')
     ef_pattern= re.compile(r'EF:\s*([0-9.]+)%')
     hba1c_pattern = re.compile(r'HbA1c:\s*([\d.]+)%')
     hr_pattern = re.compile(r'Resting HR:\s*([0-9]+)')
@@ -92,14 +91,15 @@ def get_data():
         else:
             pidn = filename
 
+        pidn=generate_unique_pidn(pidn,conn_str)
 
-        
         # Extract information using regular expressions
         # dm_match = dm_pattern.search(document)
         # dyslipidemia_match = dyslipidemia_pattern.search(document)
         # ihd_match = ihd_pattern.search(document)
+        # cabg_match = cabg_pattern.search(document)
         genderSearch= re.findall(r"female| male",document,re.IGNORECASE)
-        cabg_match = cabg_pattern.search(document)
+        age_match=age_pattern.search(document)
         ef_match = ef_pattern.search(document)
         hba1c_match = hba1c_pattern.search(document)
         hr_match= hr_pattern.search(document)
@@ -122,15 +122,11 @@ def get_data():
 
         print("File:", document_path)
         
-        # if cabg_match:
-        #     cabg= cabg_match.group(1)
-        #     # print("Coronary Artery Bypass Grafting (CABG) Date:", cabg_match.group(1))
-
-        # if hba1c_match:
-        #     hb1ac= hba1c_match.group(1).strip()
         
-        gender = ', '.join(g.capitalize() for g in genderSearch) if genderSearch else None
-        cabg= cabg_match.group(1) if cabg_match else None
+        genderstring=', '.join(g.capitalize() for g in genderSearch) if genderSearch else None
+        gender= genderstring.lower() if genderstring else None
+        age= int(age_match.group(1).strip()) if age_match else None
+        # cabg= cabg_match.group(1) if cabg_match else None
         ef= float(ef_match.group(1)) if ef_match else None
         hb1ac= float(hba1c_match.group(1)) if hba1c_match else None
         rest_hr= int(hr_match.group(1).strip()) if hr_match else None
@@ -144,7 +140,6 @@ def get_data():
         alcohol= alcohol_match.group(1).strip() if alcohol_match else None
         diet= diet_match.group(1).strip() if diet_match else None
         bmi= float(bmi_match.group(1).strip()) if bmi_match else None
-        # bmi=float(bmi)
         print(type(bmi))
         rest_bp= resting_bp_match.group(1) if resting_bp_match else None
         peak_bp= peak_bp_match.group(1) if peak_bp_match else None
@@ -154,7 +149,7 @@ def get_data():
         data = {
         'PID': [pidn],
         'gender':[gender],
-        'cabg': [cabg],
+        'age':[age],
         'ef':[ef],
         'hb1ac': [hb1ac],
         'Rest HR':[rest_hr],
@@ -179,14 +174,40 @@ def get_data():
         print(df_new)
 
 #     # Filter the DataFrame based on selected data
-    df_selected = df_new[selected_data + ['PID']+['gender']]
+    df_selected = df_new[selected_data + ['PID']+['gender']+['age']]
 
 #     # Convert the filtered DataFrame to a dictionary
     data = df_selected.to_dict(orient='records')
     print(df_selected)
     return jsonify(data)
 
+def generate_unique_pidn(pidn, conn_str):
+    connection = pyodbc.connect(conn_str)
+    cursor = conn.cursor()
+    # Establish a connection to the SQL Server database
+    try:
+        # Check if pidn already exists in the 'files' table
+        cursor.execute(f"SELECT COUNT(*) FROM fyp.dbo.extraction WHERE pid = ?", pidn)
+        count = cursor.fetchone()[0]
+
+        # If pidn exists, append a counter until a unique pidn is found
+        counter = 1
+        while count > 0:
+            counter += 1
+            new_pidn = f"{pidn}_{counter-1}"
+
+            # Check again if the new pidn exists
+            cursor.execute(f"SELECT COUNT(*) FROM fyp.dbo.extraction WHERE pid = ?", new_pidn)
+            count = cursor.fetchone()[0]
+
+        return pidn if counter == 1 else f"{pidn}_{counter-1}"
+
+    finally:
+        # Always close the database connection
+        connection.close()
+
 
 if __name__ == '__main__':
-    app.run (debug=True)
     # app.run (debug=True, port=os.getenv("PORT",default=5000))
+    app.run (debug=True)
+
