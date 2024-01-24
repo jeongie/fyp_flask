@@ -6,7 +6,6 @@ import fitz
 import pandas as pd
 
 app = Flask(__name__)
-# conn = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='fyp')
 conn_str = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
     r'SERVER=LAPTOP-24FKBFQ8\SQLEXPRESS;'
@@ -16,10 +15,6 @@ conn_str = (
 )
 
 conn = pyodbc.connect(conn_str)
-# if conn:
-#     print ("Connected Successfully")
-# else:
-#     print ("Connection Not Established")
 
 @app.route('/', methods=['POST','GET'])
 
@@ -29,13 +24,8 @@ def get_data():
     selected_data = request.get_json().get('data')
     document_list = request.get_json().get('filePath')
     print(selected_data)
-
     print(document_list)
     
-    # dm_pattern = re.compile(r'\bDM\b.*?(Under OHA)', re.DOTALL)
-    # dyslipidemia_pattern = re.compile(r'HbA1c:\s*(.*?)\n')
-    # ihd_pattern = re.compile(r'\bIHD\b')
-    # cabg_pattern = re.compile(r'-Post CABG on (\d{1,2}/\d{1,2}/\d{4})')
     age_pattern = re.compile(r'(\d+)\s*(?:years?|yrs?)-?')
     ef_pattern= re.compile(r'EF:\s*([0-9.]+)%')
     hba1c_pattern = re.compile(r'HbA1c:\s*([\d.]+)%')
@@ -93,11 +83,6 @@ def get_data():
 
         pidn=generate_unique_pidn(pidn,conn_str)
 
-        # Extract information using regular expressions
-        # dm_match = dm_pattern.search(document)
-        # dyslipidemia_match = dyslipidemia_pattern.search(document)
-        # ihd_match = ihd_pattern.search(document)
-        # cabg_match = cabg_pattern.search(document)
         genderSearch= re.findall(r"female| male",document,re.IGNORECASE)
         age_match=age_pattern.search(document)
         ef_match = ef_pattern.search(document)
@@ -126,7 +111,6 @@ def get_data():
         genderstring=', '.join(g.capitalize() for g in genderSearch) if genderSearch else None
         gender= genderstring.lower() if genderstring else None
         age= int(age_match.group(1).strip()) if age_match else None
-        # cabg= cabg_match.group(1) if cabg_match else None
         ef= float(ef_match.group(1)) if ef_match else None
         hb1ac= float(hba1c_match.group(1)) if hba1c_match else None
         rest_hr= int(hr_match.group(1).strip()) if hr_match else None
@@ -173,10 +157,10 @@ def get_data():
     # Display the resulting DataFrame
         print(df_new)
 
-#     # Filter the DataFrame based on selected data
+    # Filter the DataFrame based on selected data
     df_selected = df_new[selected_data + ['PID']+['gender']+['age']]
 
-#     # Convert the filtered DataFrame to a dictionary
+    # Convert the filtered DataFrame to a dictionary
     data = df_selected.to_dict(orient='records')
     print(df_selected)
     return jsonify(data)
@@ -208,6 +192,5 @@ def generate_unique_pidn(pidn, conn_str):
 
 
 if __name__ == '__main__':
-    # app.run (debug=True, port=os.getenv("PORT",default=5000))
     app.run (debug=True)
 
